@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../../webapp/js/axios.min.js" th:src="@{/js/axios.min.js}"></script>
+    <script src="../../webapp/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+    <script src="../../webapp/js/vue.min.js" th:src="@{/js/vue.min.js}"></script>
+    <title>分类列表</title>
+</head>
+<style>
+    #app{
+        margin-top: 100px;
+    }
+    .disableHref{
+        cursor:default;
+        color: black;
+        text-decoration:none;
+    }
+</style>
+<script>
+    $(function(){
+        $("a.disableHref").click(function(event){
+            return false;
+//                event.preventDefault();
+        });
+    });
+</script>
+<body>
+<div id="app">
+    <table id="categoryTable" border="1px" align="center" width="500px">
+        <tr><td colspan="4"><strong>更新分类</strong></td></tr>
+        <tr>
+            <td>分类名：</td>
+            <td colspan="3">
+                <input type="text" v-model="category4update.name" style="width: 97%;"/>
+                <input type="hidden" v-model="category4update.id"/>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><input type="button" value="取 消" style="width: 100%;" @click="cancel"/></td>
+            <td colspan="2"><input type="button" value="更 新" style="width: 100%;" @click="update"/></td>
+        </tr>
+    </table>
+</div>
+</body>
+<script type="text/javascript">
+    //获取地址栏参数的函数
+    function getUrlParms(name){
+        let reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        let r = window.location.search.substr(1).match(reg);
+        if(r!=null)
+            return unescape(r[2]);
+        return null;
+    }
+    let data4Vue = {
+        category4update: {id: 0, name: ""},
+    };
+    let vue = new Vue({
+        el: "#app",
+        data: data4Vue,
+        mounted: function (){//mounted　表示这个 Vue 对象加载成功了
+            this.get();
+        },
+        methods:{
+            get:function (){
+                let id = getUrlParms("id");
+                let url = "categories/" + id;
+                axios.get(url).then(function (res){
+                    vue.category4update = res.data;
+                })
+            },
+            update:function (){
+                let id = getUrlParms("id");
+                let url = "categories/" + id;
+                axios.post(url, this.category4update).then(function (res){
+                    location.href = "listCategory";
+                });
+            },
+            cancel:function (){
+                location.href = "listCategory";
+            }
+        },
+    })
+</script>
+</html>
