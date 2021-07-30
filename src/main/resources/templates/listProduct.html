@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../../webapp/js/axios.min.js" th:src="@{/js/axios.min.js}"></script>
+    <script src="../../webapp/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+    <script src="../../webapp/js/vue.min.js" th:src="@{/js/vue.min.js}"></script>
+    <title>产品列表</title>
+</head>
+<style>
+    #app{
+        margin-top: 100px;
+    }
+    .disableHref{
+        cursor:default;
+        color: black;
+        text-decoration:none;
+    }
+</style>
+<script>
+    $(function(){
+        $("a.disableHref").click(function(event){
+            return false;
+//                event.preventDefault();
+        });
+    });
+</script>
+<body>
+    <div id="app">
+        <div style="width: 500px; margin: 20px auto;"><a href="listCategory">分类页</a> <a href="listProduct">产品页</a></div>
+        <table id="productTable" border="1px" align="center" width="500px">
+            <tr><td colspan="6"><strong>产品列表</strong></td></tr>
+            <tr>
+                <td>编号</td>
+                <td>产品名</td>
+                <td>价格</td>
+                <td>分类</td>
+                <td>编辑</td>
+                <td>删除</td>
+            </tr>
+            <tr v-for="p in products">
+                <td>{{p.id}}</td>
+                <td>{{p.name}}</td>
+                <td>{{p.price}}</td>
+                <td>{{p.category.name}}</td>
+                <td><a :href="'editProduct?id=' + p.id">编辑</a></td>
+                <td><a href="#" @click="deleteC(p.id)">删除</a></td>
+            </tr>
+            <tr align="center">
+                <td colspan="6">
+                    <a href="#" :class="{disableHref:pagination.pageNum==pagination.firstPage}" @click="jump('first')">[首 页]</a>
+                    <a href="#" :class="{disableHref:!pagination.hasPreviousPage}" @click="jump('pre')">[上一页]</a>
+                    [
+                    <a href="#" :class="{disableHref:pagination.pageNum==i}" v-for="i in pagination.navigatepageNums" @click="jumpByNumber(i)">
+                        {{i}}
+                    </a>
+                    ]
+                    <a href="#" :class="{disableHref:!pagination.hasNextPage}" @click="jump('next')">[下一页]</a>
+                    <a href="#" :class="{disableHref:pagination.pageNum==pagination.lastPage}" @click="jump('last')">[末 页]</a>
+                </td>
+            </tr>
+            <tr><td colspan="6"><strong>添加产品</strong></td></tr>
+            <tr>
+                <td>分类：</td>
+                <td colspan="5">
+                    <select v-model="product4add.category.id">
+                        <option v-for="c, index in categories" :value="c.id">{{c.name}}</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>产品名：</td>
+                <td colspan="5"><input type="text" v-model="product4add.name" style="width: 97%;"/></td>
+            </tr>
+            <tr>
+                <td>价格：</td>
+                <td colspan="5"><input type="text" v-model="product4add.price" style="width: 97%;"/></td>
+            </tr>
+            <tr>
+                <td colspan="6"><input type="button" value="添 加" style="width: 100%;" @click="add"/></td>
+            </tr>
+        </table>
+    </div>
+</body>
+<script type="text/javascript">
+    //获取地址栏参数的函数
+    function getUrlParms(name){
+        let reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        let r = window.location.search.substr(1).match(reg);
+        if(r!=null)
+            return unescape(r[2]);
+        return null;
+    }
+    let data4Vue = {
+        products: [],
+        categories: [],
+        product4add: {id: 0, name: '', price: 0, category:{id: 0, name: ""}},
+        pagination: {},
+        cid: null,
+    };
+    let vue = new Vue({
+        el: "#app",
+        data: data4Vue,
+        mounted: function (){//mounted　表示这个 Vue 对象加载成功了
+            let cid = getUrlParms("cid");
+            this.cid = cid;
+            this.list(1);
+            this.listCategory();
+        },
+        methods:{
+            list:function (start){
+                let url = "";
+                if(this.cid == null)
+                    url = "products?start=" + start;
+                else
+                    url = "products?start=" + start + "&cid=" + this.cid;
+                axios.get(url).then(function (res){
+                    vue.pagination = res.data;
+                    vue.products = res.data.list;
+                });
+            },
+            listCategory:function (){
+                let url = "categories/all";
+                axios.get(url).then(function (res){
+                    vue.categories = res.data;
+                });
+            },
+            jump:function (page){
+                if("first" === page && 1 != vue.pagination.pageNum) this.list(1);
+                else if("pre" === page && vue.pagination.hasPreviousPage) this.list(vue.pagination.prePage);
+                else if("next" === page && vue.pagination.hasNextPage) this.list(vue.pagination.nextPage);
+                else if("last" === page && vue.pagination.pageNum != vue.pagination.pages) this.list(vue.pagination.pages);
+            },
+            jumpByNumber:function (start){
+                this.list(start);
+            },
+            add:function (){
+                if(this.product4add.name === "" || this.product4add.category.id === 0)
+                    alert("请输入产品，选择分类");
+                else{
+                    let url = "products";
+                    axios.post(url, this.product4add).then(function (res){
+                        vue.list(1);
+                        vue.product4add = {id: 0, name: "", price: 0, category:{id: 0, name: ""}};
+                    });
+                }
+            },
+            deleteC:function (id){
+                let url = "products/" + id;
+                axios.delete(url).then(function (res){
+                    vue.list(1);
+                    vue.product4add = {id: 0, name: "", price: 0, category:{id: 0, name: ""}};
+                });
+            },
+        },
+    })
+</script>
+</html>

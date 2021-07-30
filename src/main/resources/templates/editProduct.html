@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../../webapp/js/axios.min.js" th:src="@{/js/axios.min.js}"></script>
+    <script src="../../webapp/js/jquery.min.js" th:src="@{/js/jquery.min.js}"></script>
+    <script src="../../webapp/js/vue.min.js" th:src="@{/js/vue.min.js}"></script>
+    <title>编辑产品</title>
+</head>
+<style>
+    #app{
+        margin-top: 100px;
+    }
+    .disableHref{
+        cursor:default;
+        color: black;
+        text-decoration:none;
+    }
+</style>
+<script>
+    $(function(){
+        $("a.disableHref").click(function(event){
+            return false;
+//                event.preventDefault();
+        });
+    });
+</script>
+<body>
+<div id="app">
+    <table id="categoryTable" border="1px" align="center" width="500px">
+        <tr><td colspan="4"><strong>更新产品</strong></td></tr>
+        <tr>
+            <td>分类：</td>
+            <td>
+                <select v-model="product4update.category.id">
+                    <option v-for="c in categories" :value="c.id">{{c.name}}</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>产品名：</td>
+            <td><input type="text" v-model="product4update.name" style="width: 97%;"/></td>
+        </tr>
+        <tr>
+            <td>价格：</td>
+            <td><input type="text" v-model="product4update.price" style="width: 97%;"/></td>
+        </tr>
+        <tr>
+            <td><input type="button" value="取 消" style="width: 100%;" @click="cancel"/></td>
+            <td><input type="button" value="更 新" style="width: 100%;" @click="update"/></td>
+        </tr>
+    </table>
+</div>
+</body>
+<script type="text/javascript">
+    //获取地址栏参数的函数
+    function getUrlParms(name){
+        let reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        let r = window.location.search.substr(1).match(reg);
+        if(r!=null)
+            return unescape(r[2]);
+        return null;
+    }
+    let data4Vue = {
+        categories: [],
+        product4update: {id: 0, name: "", price: 0, category:{id: 0, name: ""}},
+    };
+    let vue = new Vue({
+        el: "#app",
+        data: data4Vue,
+        mounted: function (){//mounted　表示这个 Vue 对象加载成功了
+            this.get();
+            this.listCategory();
+        },
+        methods:{
+            get:function (){
+                let id = getUrlParms("id");
+                let url = "products/" + id;
+                axios.get(url).then(function (res){
+                    vue.product4update = res.data;
+                })
+            },
+            listCategory:function (){
+                let url = "categories/all";
+                axios.get(url).then(function (res){
+                    vue.categories = res.data;
+                });
+            },
+            update:function (){
+                let id = getUrlParms("id");
+                let url = "products/" + id;
+                axios.post(url, this.product4update).then(function (res){
+                    location.href = "listProduct";
+                });
+            },
+            cancel:function (){
+                location.href = "listProduct";
+            }
+        },
+    })
+</script>
+</html>

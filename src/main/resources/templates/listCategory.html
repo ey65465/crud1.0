@@ -28,6 +28,7 @@
 </script>
 <body>
     <div id="app">
+        <div style="width: 500px; margin: 20px auto;"><a href="listCategory">分类页</a> <a href="listProduct">产品页</a></div>
         <table id="categoryTable" border="1px" align="center" width="500px">
             <tr><td colspan="4"><strong>分类列表</strong></td></tr>
             <tr>
@@ -38,7 +39,7 @@
             </tr>
             <tr v-for="c in categories">
                 <td>{{c.id}}</td>
-                <td>{{c.name}}</td>
+                <td><a :href="'listProduct?cid=' + c.id">{{c.name}}</a></td>
                 <td><a :href="'editCategory?id=' + c.id">编辑</a></td>
                 <td><a href="#" @click="deleteC(c.id)">删除</a></td>
             </tr>
@@ -96,11 +97,15 @@
                 this.list(start);
             },
             add:function (){
-                let url = "categories";
-                axios.post(url, this.category4add).then(function (res){
-                    vue.list(1);
-                    vue.category4add = {id: 0, name: ""};
-                });
+                if(this.category4add.name === "")
+                    alert("分类名不能为空");
+                else{
+                    let url = "categories";
+                    axios.post(url, this.category4add).then(function (res){
+                        vue.list(1);
+                        vue.category4add = {id: 0, name: ""};
+                    });
+                }
             },
             deleteC:function (id){
                 let url = "categories/" + id;

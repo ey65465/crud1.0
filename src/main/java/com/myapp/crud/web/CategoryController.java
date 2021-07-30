@@ -4,14 +4,11 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.myapp.crud.pojo.Category;
 import com.myapp.crud.service.CategoryService;
-import javafx.beans.binding.ObjectExpression;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class CategoryController {
@@ -36,6 +33,11 @@ public class CategoryController {
         List<Category> cs = categoryService.list();
         PageInfo<Category> page = new PageInfo<>(cs, 5); // 5表示导航分页最多5个
         return page;
+    }
+    @GetMapping("/categories/all")
+    public List<Category> list(){
+        List<Category> cs = categoryService.list();
+        return cs;
     }
     @PostMapping("/categories")
     public String add(@RequestBody Category category){
